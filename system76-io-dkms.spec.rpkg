@@ -1,0 +1,68 @@
+# The following tag is to get correct syntax highlighting for this file in vim text editor
+# vim: syntax=spec
+
+Name:       {{{ git_dir_name }}}
+Version:    {{{ git_dir_version }}}
+Release:    1%{?dist}
+Summary:    {{{ git_dir_name }}} 
+License:    GPLv3
+URL:        https://github.com/pop-os/system76-io-dkms
+
+# Detailed information about the source Git repository and the source commit
+# for the created rpm package
+VCS:        {{{ git_dir_vcs }}}
+
+# git_dir_pack macro places the repository content (the source files) into a tarball
+# and returns its filename. The tarball will be used to build the rpm.
+Source:     {{{ git_dir_pack }}}
+
+#Packages required for build
+#BuildRequires: dbus-devel
+
+#Packages required to work
+Requires: dkms
+Requires: kernel-devel
+
+# More detailed description of the package
+%description
+System76 IO DKMS (Dynamic Kernel Module Support)
+-----
+ DKMS driver for controlling System76 IO Board.
+ The module is rebuilt through the DKMS system when a new kernel or module
+ become available.
+ 
+%define debug_package %{nil}
+
+#--
+%prep
+{{{ git_dir_setup_macro }}}
+
+%install
+install -D -m 0644 *.c -t "%{buildroot}%{_usrsrc}/system76-io-{{{ git_dir_version }}}/"
+install -m 0644 Makefile -t "%{buildroot}%{_usrsrc}/system76-io-{{{ git_dir_version }}}/"
+install -m 0644 debian/system76-io-dkms.dkms "%{buildroot}%{_usrsrc}/system76-io-{{{ git_dir_version }}}/dkms.conf"
+
+# do after installation
+%post
+sed -i 's/PACKAGE_VERSION="#MODULE_VERSION#"/PACKAGE_VERSION="{{{ git_dir_version }}}"/g' %{_usrsrc}/system76-io-{{{ git_dir_version }}}/dkms.conf
+
+/usr/bin/env dkms add -m system76-io -v {{{ git_dir_version }}} --rpm_safe_upgrade
+/usr/bin/env dkms build -m system76-io -v {{{ git_dir_version }}}
+/usr/bin/env dkms install -m system76-io -v {{{ git_dir_version }}} --force
+
+# do before uninstallation
+%preun
+/usr/bin/env rmmod system76-io || : 
+/usr/bin/env dkms remove -m system76-io -v {{{ git_dir_version }}} --all --rpm_safe_upgrade || :
+
+# do after uninstallation, bugfix
+%postun
+rm -rfv /var/lib/dkms/system76-io/{{{ git_dir_version }}}
+
+# Those files will be in the rpm
+%files
+%{_usrsrc}/system76-io-{{{ git_dir_version }}}
+
+# Changelog
+%changelog
+{{{ git_dir_changelog }}}
