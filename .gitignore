@@ -1,11 +1,1 @@
-*.cmd
-*.ko
-*.mod
-*.mod.c
-*.o
-/Module.symvers
-/debian/*debhelper*
-/debian/files
-/debian/system76-io-dkms.substvars
-/debian/system76-io-dkms/
-/modules.order
+.rpkg-build/
